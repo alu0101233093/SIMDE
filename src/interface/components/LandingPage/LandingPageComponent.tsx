@@ -15,8 +15,10 @@ const LandingPageComponent = () => {
             <li className="pagetitle"><p>{t('landingPage.pagetitle')}</p></li>
             <li><Link to="/">{t('landingPage.home')}</Link></li>
             <li><Link to="/Project">{t('landingPage.project')}</Link></li>
+            <li><Link to="/Activities">{t('landingPage.activities')}</Link></li>
+            <li style={{ float: 'right' }}><Link to="/LogIn">{t('landingPage.logIn')}</Link></li>
           </ul>
-         </div>
+        </div>
          <div className="pagecontent">
            <div className="row">
             <div className=" architecture col-3 col-sm-12 col-md-12 col-lg-12">

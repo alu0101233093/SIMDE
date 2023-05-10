@@ -158,6 +158,8 @@
         "read": "Leer más",
         "home": "Home",
         "project": "Proyecto",
+        "activities": "Actividades",
+        "logIn": "Iniciar Sesión",
         "superescalar": "Superescalar",
         "superescalar_description": "Simula el funcionamiento de una máquina superescalar ejecutando tu código paso a paso!",
         "go": "Ir",
@@ -182,6 +184,17 @@
         "problemsdescription": "Puedes consultar nuestra documentación",
         "licency": "@liberado bajo licencia GPLv3"
        
+    },
+    "LogInPage": {
+        "pagetitle": "SIMDEWeb",
+        "home": "Home",
+        "project": "Proyecto",
+        "activities": "Actividades",
+        "logIn": "Iniciar Sesión",
+        "signIn": "Registarse",
+        "emailLabel": "Correo electrónico",
+        "passwordLabel": "Contraseña",
+        "confirmPasswordLabel": "Confirma tu contraseña"
     },
     "planificator": {
         "IntegerAdd": "+Entera",

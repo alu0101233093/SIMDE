@@ -5,6 +5,8 @@ import ProjectPage from "./components/LandingPage/ProjectPageComponent";
 
 import SuperescalarComponent from "./components/Superescalar/SuperescalarComponent";
 import VLIWComponent from "./components/VLIW/VLIWComponent";
+import LogInPageComponent from "./components/User/LogInPageComponent";
+import ActivitiesPageComponent from "./components/Activities/ActivitiesPageComponent";
 
 
 const App = () => {
@@ -17,6 +19,8 @@ const App = () => {
                     <Route path="/superescalar" element={<SuperescalarComponent />} />
                     <Route path="/vliw" element={<VLIWComponent />} />
                     <Route path="/project" element={<ProjectPage />} />
+                    <Route path="/activities" element={<ActivitiesPageComponent />} />
+                    <Route path="/logIn" element={<LogInPageComponent />} />
                 </Routes>
             </React.Suspense>
             </div>

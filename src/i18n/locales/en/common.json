@@ -159,6 +159,8 @@
         "read": "Read more",
         "home": "Home",
         "project": "Project",
+        "activities": "Activities",
+        "logIn": "Log In",
         "superescalar": "Superescalar",
         "superescalar_description": "Simulate the operation of a superscalar machine executing your code step by step!",
         "go": "Go",
@@ -184,7 +186,17 @@
         "licency": "@Released under GPLv3 licency"
        
     },
-
+    "LogInPage": {
+        "pagetitle": "SIMDEWeb",
+        "home": "Home",
+        "project": "Project",
+        "activities": "Activities",
+        "logIn": "Log In",
+        "signIn": "Sign In",
+        "emailLabel": "E-mail",
+        "passwordLabel": "Password",
+        "confirmPasswordLabel": "Confirm password"
+    },
     "planificator": {
         "IntegerAdd": "+Integer",
         "IntegerMult": "xInteger",

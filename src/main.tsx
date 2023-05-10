@@ -10,13 +10,35 @@ import './main.scss';
 
 import App from './interface/App';
 
+import { FirebaseAppProvider } from 'reactfire'
+
+// Import Firebase and configuration
+import { initializeApp } from 'firebase/app';
+import 'firebase/auth';
+import 'firebase/database';
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBqokoBJjcC74V7Pi4RreTLYlVKvUvLM4M",
+    authDomain: "tfg-simde.firebaseapp.com",
+    projectId: "tfg-simde",
+    storageBucket: "tfg-simde.appspot.com",
+    messagingSenderId: "146015167050",
+    appId: "1:146015167050:web:a0e29d158ee4a3fe04bcb3",
+    measurementId: "G-3DP30HR76K"
+};
+
+export const app = initializeApp(firebaseConfig);
+
 // React application entrypoint
 const render = (Component: React.ComponentType) => {
     ReactDOM.render(
         <React.StrictMode>
             <Provider store={store}>
                 <I18nextProvider i18n={i18n}>
-                <Component />
+                <FirebaseAppProvider firebaseConfig={firebaseConfig}>  
+                    <Component />
+                </FirebaseAppProvider> 
                 </I18nextProvider>
             </Provider>
         </React.StrictMode>,
