@@ -194,7 +194,8 @@
         "signIn": "Registarse",
         "emailLabel": "Correo electrónico",
         "passwordLabel": "Contraseña",
-        "confirmPasswordLabel": "Confirma tu contraseña"
+        "confirmPasswordLabel": "Confirma tu contraseña",
+        "UnidentifiedMessage": "Para acceder a esta página, primero debe identificarse"
     },
     "planificator": {
         "IntegerAdd": "+Entera",

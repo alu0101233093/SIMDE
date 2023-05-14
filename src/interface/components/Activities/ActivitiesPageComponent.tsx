@@ -1,34 +1,96 @@
 import * as React from "react";
-import {BrowserRouter as Router, Route, Link} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Link} from 'react-router-dom';
 import { useTranslation } from "react-i18next";
+// import { useFirebaseApp } from "reactfire";
+import { app, database } from "../../../main";
+import { child, get, getDatabase, onValue, ref, set } from "firebase/database";
+
+
+interface UserData {
+  groups: Record<string, string>;
+  activities: Record<string, {actualPhase: string}>;
+}
+
+interface GroupsData {
+  participants: Record<string, string>;
+  activities: Record<string, {actualPhase: string}>;
+}
 
 const ActivitiesPageComponent = (props) => {
-    const [t, i18n] = useTranslation();
+  const dbRef = ref(database);
+  const [t, _] = useTranslation();
+  const [userData, setUserData] = React.useState<UserData>({
+    groups: {},
+    activities: {}
+  });
+  const [groupsData, setGroupsData] = React.useState<GroupsData>({
+    participants: {},
+    activities: {}
+  });
+  const [loading, setLoading] = React.useState(true);
 
-    return (
-      <div className="page">
-        <div className="topnav">
-          <ul className="navul">
-            <b className="navbaricon"><img alt="icon" src="https://adiumxtras.com/images/pictures/futuramas_bender_dock_icon_1_8169_3288_image_4129.png"></img></b>
-            <li className="pagetitle"><p>{t('landingPage.pagetitle')}</p></li>
-            <li><Link to="/">{t('landingPage.home')}</Link></li>
-            <li><Link to="/Project">{t('landingPage.project')}</Link></li>
-            <li><Link to="/Activities">{t('landingPage.activities')}</Link></li>
-            <li style={{ float: 'right' }}><Link to="/LogIn">{t('landingPage.logIn')}</Link></li>
-          </ul>
+  React.useEffect(() => {
+    Promise.all([
+      get(child(dbRef, 'Users/StudentTest')),
+      get(child(dbRef, 'Groups/GroupTest'))
+    ]).then(([userSnapshot, groupsSnapshot]) => {
+        if (userSnapshot.exists()) {
+          setUserData(userSnapshot.val());
+        } else {
+          console.log("No user data available");
+        }
+
+        if (groupsSnapshot.exists()) {
+          setGroupsData(groupsSnapshot.val());
+        } else {
+          console.log("No groups data available");
+        }
+
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [dbRef]);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  return (
+    <div className="page">
+      <div className="container">
+        <div className="row">
+          <div className="btn-group-vertical col-md-4" role="group">
+            <h2 className="text-center mx-auto">Actividades Individuales</h2>
+            {Object.entries(userData.activities).map(([id]) => (
+              <div key={id}>
+                <button type="button" className="btn btn-primary">{id}</button>
+              </div>
+            ))}
+            <h2 className="text-center mx-auto mt-5">Actividades Grupales</h2>
+            {Object.entries(groupsData.activities).map(([id]) => (
+              <div key={id}>
+                <button type="button" className="btn btn-primary">{id}</button>
+              </div>
+            ))}
+          </div>
+
+          <div className="content col-md-8">
+            <div className="form-container col-7 mx-auto text-center">
+              <h1 className="mb-4">Introduce el código de la actividad</h1>
+              <form>
+                <div className="form-group">
+                  <input type="text" className="form-control" placeholder="Ejemplo: 123456" />
+                </div>
+                <button type="submit" className="btn btn-primary btn-lg mt-3">Jugar</button>
+              </form>
+            </div>
+          </div>
         </div>
-        <div className="pageproject">
-           
-           <h2>{t('projectPage.howtouse')}</h2>
-           <Link to="/superescalar"><p>{t('projectPage.howtousedescription')}</p></Link>
-           <h2>{t('projectPage.problems')}</h2>
-           <a href="https://etsiiull.gitbooks.io/simde/"><p>{t('projectPage.problemsdescription')}</p></a>
-         </div>
-        <nav className="footer navbar navbar-default navbar-fixed-bottom sticky">
-          <div className="licence text-light"><a>{t('landingPage.licency')}</a></div>
-        </nav>
       </div>
-    );
+    </div>
+  );
 }
 
 export default ActivitiesPageComponent;

@@ -6,6 +6,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'fire
 import { getAuth } from "firebase/auth"
 // import { useFirebaseApp } from "reactfire";
 import { app } from "../../../main";
+import { useDispatch } from "react-redux";
 
 const LogInPageComponent = () => {
   const [LogInEmail, setLogInEmail] = React.useState('');
@@ -13,12 +14,13 @@ const LogInPageComponent = () => {
   const [SignInEmail, setSignInEmail] = React.useState('');
   const [SignInPassword, setSignInPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
-  // const firebase = useFirebaseApp();
   const [t, _] = useTranslation();
+  const dispatch = useDispatch();
 
   const handleLogInEmailChange = (event) => {
     setLogInEmail(event.target.value);
   };
+
   const handleSignInEmailChange = (event) => {
     setSignInEmail(event.target.value);
   };
@@ -41,6 +43,7 @@ const LogInPageComponent = () => {
       await signInWithEmailAndPassword(getAuth(app), LogInEmail, LogInPassword);
       alert('Successfully logged in!');
       // redirigir a la página de inicio de sesión exitosa
+      dispatch({ type: "LOGEDIN", value: LogInEmail });
     } catch (error) {
       //console.error('Error logging in:', error);
       alert('Error logging in:');
@@ -69,19 +72,12 @@ const LogInPageComponent = () => {
   
   return (
   <div className="page">
-    <div className="topnav mb-5">
-      <ul className="navul">
-        <b className="navbaricon"><img alt="icon" src="https://adiumxtras.com/images/pictures/futuramas_bender_dock_icon_1_8169_3288_image_4129.png"></img></b>
-        <li className="pagetitle"><p>{t('LogInPage.pagetitle')}</p></li>
-        <li><Link to="/">{t('LogInPage.home')}</Link></li>
-        <li><Link to="/Project">{t('LogInPage.project')}</Link></li>
-        <li><Link to="/Activities">{t('LogInPage.activities')}</Link></li>
-        <li style={{ float: 'right' }}><Link to="/LogIn">{t('LogInPage.logIn')}</Link></li>
-      </ul>
-    </div>
+    <h1 className="text-center mb-5">
+      Te damos la bienvenida a SIMDE Web
+    </h1>
     <div className="container">
       <div className="row">
-        <div className="col-md-6">
+        <div className="col-md-5">
           <div className="card">
             <div className="card-header text-center">{t('LogInPage.signIn')}</div>
             <div className="card-body">
@@ -103,7 +99,8 @@ const LogInPageComponent = () => {
             </div>
           </div>
         </div>
-        <div className="col-md-6">
+        <div className="col-md-2"></div>
+        <div className="col-md-5">
           <div className="card">
             <div className="card-header text-center">{t('LogInPage.logIn')}</div>
             <div className="card-body">
@@ -123,9 +120,6 @@ const LogInPageComponent = () => {
         </div>
       </div>
     </div>
-    <nav className="footer navbar navbar-default navbar-fixed-bottom sticky mt-5">
-      <div className="licence text-light"><a>{t('projectPage.licency')}</a></div>
-    </nav>
   </div>
   );
 }

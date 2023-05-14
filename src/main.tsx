@@ -16,11 +16,13 @@ import { FirebaseAppProvider } from 'reactfire'
 import { initializeApp } from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/database';
+import { getDatabase } from 'firebase/database';
 
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBqokoBJjcC74V7Pi4RreTLYlVKvUvLM4M",
     authDomain: "tfg-simde.firebaseapp.com",
+    databaseURL: "https://tfg-simde-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "tfg-simde",
     storageBucket: "tfg-simde.appspot.com",
     messagingSenderId: "146015167050",
@@ -29,6 +31,7 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
+export const database = getDatabase(app);
 
 // React application entrypoint
 const render = (Component: React.ComponentType) => {
@@ -36,9 +39,9 @@ const render = (Component: React.ComponentType) => {
         <React.StrictMode>
             <Provider store={store}>
                 <I18nextProvider i18n={i18n}>
-                <FirebaseAppProvider firebaseConfig={firebaseConfig}>  
-                    <Component />
-                </FirebaseAppProvider> 
+                    <FirebaseAppProvider firebaseConfig={firebaseConfig}>  
+                        <Component />
+                    </FirebaseAppProvider> 
                 </I18nextProvider>
             </Provider>
         </React.StrictMode>,

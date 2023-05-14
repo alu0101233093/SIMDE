@@ -9,16 +9,6 @@ const LandingPageComponent = () => {
 
     return (
       <div className="page">
-        <div className="topnav">
-          <ul className="navul">
-            <b className="navbaricon"><img alt="icon" src="https://adiumxtras.com/images/pictures/futuramas_bender_dock_icon_1_8169_3288_image_4129.png"></img></b>
-            <li className="pagetitle"><p>{t('landingPage.pagetitle')}</p></li>
-            <li><Link to="/">{t('landingPage.home')}</Link></li>
-            <li><Link to="/Project">{t('landingPage.project')}</Link></li>
-            <li><Link to="/Activities">{t('landingPage.activities')}</Link></li>
-            <li style={{ float: 'right' }}><Link to="/LogIn">{t('landingPage.logIn')}</Link></li>
-          </ul>
-        </div>
          <div className="pagecontent">
            <div className="row">
             <div className=" architecture col-3 col-sm-12 col-md-12 col-lg-12">
@@ -52,10 +42,7 @@ const LandingPageComponent = () => {
             </div>
           </div>
         </div>
-        <nav className="footer navbar navbar-default navbar-fixed-bottom sticky">
-          <div className="licence text-light"><a>{t('landingPage.licency')}</a></div>
-        </nav>
-        </div>
+      </div>
     );
 }
 
