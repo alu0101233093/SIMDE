@@ -1,12 +1,13 @@
 import * as React from "react";
-import { BrowserRouter as Router, Route, Link} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Link, Navigate, useNavigate} from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 import { getAuth } from "firebase/auth"
 // import { useFirebaseApp } from "reactfire";
-import { app } from "../../../main";
+import { app, database } from "../../../main";
 import { useDispatch } from "react-redux";
+import { equalTo, get, orderByChild, push, query, ref, set } from "firebase/database";
 
 const LogInPageComponent = () => {
   const [LogInEmail, setLogInEmail] = React.useState('');
@@ -15,7 +16,10 @@ const LogInPageComponent = () => {
   const [SignInPassword, setSignInPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [t, _] = useTranslation();
+  const usersRef = ref(database, "Users");
+  const newUserRef = push(usersRef);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleLogInEmailChange = (event) => {
     setLogInEmail(event.target.value);
@@ -41,12 +45,17 @@ const LogInPageComponent = () => {
     event.preventDefault();
     try {
       await signInWithEmailAndPassword(getAuth(app), LogInEmail, LogInPassword);
-      alert('Successfully logged in!');
       // redirigir a la página de inicio de sesión exitosa
-      dispatch({ type: "LOGEDIN", value: LogInEmail });
+      const emailQuery = await get(query(usersRef, orderByChild("email"), equalTo(LogInEmail)));
+      const snapshot = emailQuery;
+      const users = snapshot.val();
+      const userID = Object.keys(users)[0];
+      alert('Successfully logged in!');
+      dispatch({ type: "LOGEDIN", value: userID });
+      navigate("/Profile");
     } catch (error) {
-      //console.error('Error logging in:', error);
-      alert('Error logging in:');
+      console.error(error);
+      alert("Error logging in");
     }
   };
 
@@ -62,11 +71,17 @@ const LogInPageComponent = () => {
     }
     try {
       await createUserWithEmailAndPassword(getAuth(app), SignInEmail, SignInPassword);
+      await set(newUserRef, {
+        email: SignInEmail,
+        lastName: "",
+        name: "",
+        role: "student"
+      });
       alert('Successfully registered!');
       // redirigir a la página de inicio de sesión exitosa
     } catch (error) {
-      console.error('Error registering:', error);
-      alert('Error registering:');
+      console.error(error);
+      alert('Error registering');
     }
   };
   

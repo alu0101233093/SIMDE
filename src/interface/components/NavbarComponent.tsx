@@ -1,11 +1,9 @@
-import * as React from "react";
-import { BrowserRouter as Router, Route, Link} from 'react-router-dom';
+import React from "react";
+import { Link } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
-import { UserState } from "../reducers/user";
-import { store } from "../../store";
+import { connect } from "react-redux";
 
-const NavbarComponent = () => {
+const NavbarComponent = (props) => {
   const [t, _] = useTranslation();
 
   return (
@@ -30,11 +28,22 @@ const NavbarComponent = () => {
           <Link to="/Activities">{t("LogInPage.activities")}</Link>
         </li>
         <li style={{ float: "right" }}>
-          <Link to="/LogIn">{t("LogInPage.logIn")}</Link>
+          {props.logged ? (
+            <Link to="/Profile">Perfil</Link>
+          ) : (
+            <Link to="/LogIn">{t("LogInPage.logIn")}</Link>
+          )}
         </li>
       </ul>
     </div>
   );
 }
 
-export default NavbarComponent;
+const mapStateToProps = state => {
+  return {
+    userEmail: state.User.userEmail,
+    logged: state.User.logged
+  }
+}
+
+export default connect(mapStateToProps)(NavbarComponent);

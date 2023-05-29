@@ -62,18 +62,18 @@ const ActivitiesPageComponent = (props) => {
       <div className="container">
         <div className="row">
           <div className="btn-group-vertical col-md-4" role="group">
-            <h2 className="text-center mx-auto">Actividades Individuales</h2>
+            <h2 className="text-center mx-auto">Actividades públicas</h2>
             {Object.entries(userData.activities).map(([id]) => (
               <div key={id}>
                 <button type="button" className="btn btn-primary">{id}</button>
               </div>
             ))}
-            <h2 className="text-center mx-auto mt-5">Actividades Grupales</h2>
-            {Object.entries(groupsData.activities).map(([id]) => (
+            <h2 className="text-center mx-auto mt-5">Actividades privadas</h2>
+            {/* {Object.entries(groupsData.activities).map(([id]) => (
               <div key={id}>
                 <button type="button" className="btn btn-primary">{id}</button>
               </div>
-            ))}
+            ))} */}
           </div>
 
           <div className="content col-md-8">

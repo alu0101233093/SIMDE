@@ -1,45 +1,63 @@
-import * as React from "react";
-import { BrowserRouter as Router, Route, Link} from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-// import { useFirebaseApp } from "reactfire";
-import { app, database } from "../../../main";
-import { child, get, getDatabase, onValue, ref, set } from "firebase/database";
-
+import { connect, useDispatch } from "react-redux";
+import { database } from "../../../main";
+import { child, equalTo, get, orderByChild, query, ref } from "firebase/database";
+import { Navigate, useNavigate } from "react-router";
 
 interface UserData {
   lastName: string;
   email: string;
   name: string;
   role: string;
-  activities: Record<string, {actualPhase: number}>;
+  activities: Record<string, { actualPhase: number }>;
 }
 
-const ProfilePageComponent = () => {
+const ProfilePageComponent = (props) => {
+  const navigate = useNavigate();
+  if (!props.logged) {
+    navigate("/logIn");
+  }
 
   const dbRef = ref(database);
   const [t, _] = useTranslation();
-  const [userData, setUserData] = React.useState<UserData>({
+  const dispatch = useDispatch();
+  const [userData, setUserData] = useState<UserData>({
     lastName: "",
     email: "",
     name: "",
     role: "",
-    activities: {}
+    activities: {},
   });
 
-  React.useEffect(() => {
-    get(child(dbRef, 'Users/StudentTest')).then((snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        if (JSON.stringify(data) !== JSON.stringify(userData)) {
-          setUserData(data);
+  useEffect(() => {
+    get(child(dbRef, 'Users/' + props.userID))
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          if (JSON.stringify(data) !== JSON.stringify(userData)) {
+            setUserData(data);
+          }
+        } else {
+          console.log("No data available");
         }
-      } else {
-        console.log("No data available");
-      }
-    }).catch((error) => {
-      console.error(error);
-    });
-  }, []);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [props.logged]);
+
+  const handleLogout = async (event) => {
+    event.preventDefault();
+    dispatch({ type: "LOGEDOUT"});
+    alert("Successfully logged out!")
+    navigate("/");
+  };
+
+  function handleDeleteUser(){
+    dispatch({ type: "LOGEDOUT"});
+  }
 
   return (
     <div className="container mt-5">
@@ -53,21 +71,35 @@ const ProfilePageComponent = () => {
           />
         </div>
         <div className="col-md-8">
-          <h3>{userData.name + ' ' + userData.lastName}</h3>
-          <h4>{userData.email}</h4>
-          <p>Rol: {userData.role}</p>
-          {/* <p>Actividades: 
-            {Object.entries(userData.activities).map(([id, actividad]) => (
-              <div key={id}>
-                <p>ID: {id}</p>
-                <p>Fase Actual: {actividad.actualPhase}</p>
-              </div>
-            ))}
-          </p> */}
+          <p className="h4">
+            <strong>Name:</strong> {userData.name} {userData.lastName}
+          </p>
+          <p className="h4">
+            <strong>Email:</strong> {userData.email}
+          </p>
+          <p className="h4">
+            <strong>Rol:</strong> {userData.role}
+          </p>
+          <div className="mt-3">
+            <button className="btn btn-danger" onClick={handleLogout}>
+              Cerrar sesión
+            </button>
+            <button className="btn btn-danger m-5" onClick={handleDeleteUser}>
+              Eliminar usuario
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
-export default ProfilePageComponent;
+const mapStateToProps = (state) => {
+  return {
+    userID: state.User.userID,
+    logged: state.User.logged,
+  };
+};
+
+export default connect(mapStateToProps)(ProfilePageComponent);
+
