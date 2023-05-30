@@ -4,10 +4,11 @@ import { useTranslation } from "react-i18next";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 import { getAuth } from "firebase/auth"
-// import { useFirebaseApp } from "reactfire";
 import { app, database } from "../../../main";
 import { useDispatch } from "react-redux";
 import { equalTo, get, orderByChild, push, query, ref, set } from "firebase/database";
+
+import swal from 'sweetalert';
 
 const LogInPageComponent = () => {
   const [LogInEmail, setLogInEmail] = React.useState('');
@@ -41,31 +42,32 @@ const LogInPageComponent = () => {
     setConfirmPassword(event.target.value);
   };
 
-  const handleFormSubmit = async (event) => {
+  const handleLogInSubmit = async (event) => {
     event.preventDefault();
     try {
       await signInWithEmailAndPassword(getAuth(app), LogInEmail, LogInPassword);
-      // redirigir a la página de inicio de sesión exitosa
+      // para guardar la ID del usuario en el estado
       const emailQuery = await get(query(usersRef, orderByChild("email"), equalTo(LogInEmail)));
       const users = emailQuery.val();
       const userID = Object.keys(users)[0];
-      alert('Successfully logged in!');
       dispatch({ type: "LOGEDIN", value: userID });
+      // redirigiendo a profile
+      await swal("Successfully logged in!", "Redirecting to Profile...", "success");
       navigate("/Profile");
     } catch (error) {
       console.error(error);
-      alert("Error logging in");
+      swal("Error logging in", String(error), "error");
     }
   };
 
   const handleSignInSubmit = async (event) => {
     event.preventDefault();
     if (SignInPassword !== confirmPassword) {
-      alert('Passwords do not match');
+      swal("Passwords do not match", "Try again", "info");
       return;
     }
     if (SignInPassword.length < 6) {
-      alert('Password needs to have at least 6 characters');
+      swal("Password too short", "Password needs to have at least 6 characters", "info");
       return;
     }
     try {
@@ -76,11 +78,19 @@ const LogInPageComponent = () => {
         name: "",
         role: "student"
       });
-      alert('Successfully registered!');
-      // redirigir a la página de inicio de sesión exitosa
+      // Inicio de sesión
+      await signInWithEmailAndPassword(getAuth(app), SignInEmail, SignInPassword);
+      // para guardar la ID del usuario en el estado
+      const emailQuery = await get(query(usersRef, orderByChild("email"), equalTo(SignInEmail)));
+      const users = emailQuery.val();
+      const userID = Object.keys(users)[0];
+      dispatch({ type: "LOGEDIN", value: userID });
+      // redirigiendo a profile
+      await swal("Successfully registered!", "Redirecting to Profile...", "success");
+      navigate("/Profile");
     } catch (error) {
       console.error(error);
-      alert('Error registering');
+      swal("Error registering", String(error), "error");
     }
   };
   
@@ -118,7 +128,7 @@ const LogInPageComponent = () => {
           <div className="card">
             <div className="card-header text-center">{t('LogInPage.logIn')}</div>
             <div className="card-body">
-              <form onSubmit={handleFormSubmit}>
+              <form onSubmit={handleLogInSubmit}>
                 <div className="form-group m-3">
                   <label htmlFor="loginEmail">{t('LogInPage.emailLabel')}</label>
                   <input type="email" id="loginEmail" className="form-control" value={LogInEmail} onChange={handleLogInEmailChange} />

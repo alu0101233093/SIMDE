@@ -5,6 +5,7 @@ import { connect, useDispatch } from "react-redux";
 import { database } from "../../../main";
 import { child, equalTo, get, orderByChild, query, ref } from "firebase/database";
 import { Navigate, useNavigate } from "react-router";
+import swal from 'sweetalert';
 
 interface UserData {
   lastName: string;
@@ -51,12 +52,27 @@ const ProfilePageComponent = (props) => {
   const handleLogout = async (event) => {
     event.preventDefault();
     dispatch({ type: "LOGEDOUT"});
-    alert("Successfully logged out!")
+    await swal("Successfully logged out!", "Redirecting to landing page...", "success");
     navigate("/");
   };
 
-  function handleDeleteUser(){
-    dispatch({ type: "LOGEDOUT"});
+  const handleDeleteUser = async (event) => {
+    event.preventDefault();
+    await swal({
+      title: "Are you sure?",
+      text: "Once deleted, you will not be able to recover this user!",
+      icon: "warning",
+      buttons: ["Stop", "Delete it"],
+      dangerMode: true,
+    })
+    .then((willDelete) => {
+      if (willDelete) {
+        swal("Poof! Your imaginary file has been deleted!", {
+          icon: "success",
+        });
+        dispatch({ type: "LOGEDOUT"});
+      }
+    });
   }
 
   return (

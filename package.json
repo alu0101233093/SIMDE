@@ -66,6 +66,7 @@
     "react-router-dom": "^6.0.0",
     "reactfire": "^4.2.2",
     "redux": "^4.2.0",
+    "sweetalert": "^2.1.2",
     "tslib": "^2.2.0",
     "webpack-dev-server": "4.13.3",
     "webpack-merge": "^5.8.0"
