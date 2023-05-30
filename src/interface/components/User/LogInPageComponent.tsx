@@ -18,7 +18,6 @@ const LogInPageComponent = () => {
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [t, _] = useTranslation();
   const usersRef = ref(database, "Users");
-  const newUserRef = push(usersRef);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -71,8 +70,15 @@ const LogInPageComponent = () => {
       return;
     }
     try {
-      await createUserWithEmailAndPassword(getAuth(app), SignInEmail, SignInPassword);
-      await set(newUserRef, {
+      let uid: string = ""
+      // Creación del usuario en Firebase Authentication
+      await createUserWithEmailAndPassword(getAuth(app), SignInEmail, SignInPassword)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        uid = user.uid;
+      });
+      // Se guarda el nuevo usuario en Firebase RTDB
+      await set(ref(database,"Users/" + uid), {
         email: SignInEmail,
         lastName: "",
         name: "",
@@ -80,12 +86,12 @@ const LogInPageComponent = () => {
       });
       // Inicio de sesión
       await signInWithEmailAndPassword(getAuth(app), SignInEmail, SignInPassword);
-      // para guardar la ID del usuario en el estado
+      // Se guarda la ID del usuario en el estado
       const emailQuery = await get(query(usersRef, orderByChild("email"), equalTo(SignInEmail)));
       const users = emailQuery.val();
       const userID = Object.keys(users)[0];
       dispatch({ type: "LOGEDIN", value: userID });
-      // redirigiendo a profile
+      // Redirigiendo a profile
       await swal("Successfully registered!", "Redirecting to Profile...", "success");
       navigate("/Profile");
     } catch (error) {

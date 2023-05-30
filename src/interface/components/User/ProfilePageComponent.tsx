@@ -51,8 +51,8 @@ const ProfilePageComponent = (props) => {
 
   const handleLogout = async (event) => {
     event.preventDefault();
-    dispatch({ type: "LOGEDOUT"});
     await swal("Successfully logged out!", "Redirecting to landing page...", "success");
+    dispatch({ type: "LOGEDOUT"});
     navigate("/");
   };
 
