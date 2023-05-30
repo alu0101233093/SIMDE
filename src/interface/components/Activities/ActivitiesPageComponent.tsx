@@ -1,10 +1,11 @@
 import * as React from "react";
-import { BrowserRouter as Router, Route, Link} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Link, useNavigate} from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 // import { useFirebaseApp } from "reactfire";
 import { app, database } from "../../../main";
 import { child, equalTo, get, getDatabase, onValue, orderByChild, query, ref, set } from "firebase/database";
 import { connect } from "react-redux";
+import swal from "sweetalert";
 
 interface Group {
   actualPhase: number
@@ -28,6 +29,15 @@ interface ActivityList {
 }
 
 const ActivitiesPageComponent = (props) => {
+  const navigate = useNavigate();
+
+  const loggedCheck = async () => {
+    if (!props.logged) {
+      await swal("User not logged", "You have to login to access this page", "info");
+      navigate("/logIn");
+    }
+  }
+
   const [t, _] = useTranslation();
   const [activityData, setActivityData] = React.useState<ActivityList>({
     privateActivities: {},
@@ -35,6 +45,7 @@ const ActivitiesPageComponent = (props) => {
   });
 
   React.useEffect(() => {
+    loggedCheck();
     const fetchData = async () => {
       try {
         const database = getDatabase();
