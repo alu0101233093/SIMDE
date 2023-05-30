@@ -3,59 +3,77 @@ import { BrowserRouter as Router, Route, Link} from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 // import { useFirebaseApp } from "reactfire";
 import { app, database } from "../../../main";
-import { child, get, getDatabase, onValue, ref, set } from "firebase/database";
+import { child, equalTo, get, getDatabase, onValue, orderByChild, query, ref, set } from "firebase/database";
+import { connect } from "react-redux";
 
-
-interface UserData {
-  groups: Record<string, string>;
-  activities: Record<string, {actualPhase: string}>;
+interface Group {
+  actualPhase: number
+  files: Record<string,string>
+  participants: Record<string,string>
+  score: number
 }
 
-interface GroupsData {
-  participants: Record<string, string>;
-  activities: Record<string, {actualPhase: string}>;
+interface Activity {
+  evaluation: string
+  groups: Record<string, Group>
+  maxNumParticipants: number
+  minNumParticipants: number
+  private: boolean
+  tasks: Record<string, {actualPhase: string}>
+}
+
+interface ActivityList {
+  privateActivities: Record<string,Activity>
+  publicActivities: Record<string,Activity>
 }
 
 const ActivitiesPageComponent = (props) => {
-  const dbRef = ref(database);
   const [t, _] = useTranslation();
-  const [userData, setUserData] = React.useState<UserData>({
-    groups: {},
-    activities: {}
+  const [activityData, setActivityData] = React.useState<ActivityList>({
+    privateActivities: {},
+    publicActivities: {}
   });
-  const [groupsData, setGroupsData] = React.useState<GroupsData>({
-    participants: {},
-    activities: {}
-  });
-  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    Promise.all([
-      get(child(dbRef, 'Users/StudentTest')),
-      get(child(dbRef, 'Groups/GroupTest'))
-    ]).then(([userSnapshot, groupsSnapshot]) => {
-        if (userSnapshot.exists()) {
-          setUserData(userSnapshot.val());
-        } else {
-          console.log("No user data available");
-        }
-
-        if (groupsSnapshot.exists()) {
-          setGroupsData(groupsSnapshot.val());
-        } else {
-          console.log("No groups data available");
-        }
-
-        setLoading(false);
-      })
-      .catch((error) => {
+    const fetchData = async () => {
+      try {
+        const database = getDatabase();
+        const actRef = ref(database, "Activities");
+  
+        // Fetch private activities
+        const privateActivityQuery = query(actRef, orderByChild("private"), equalTo(true));
+        const privateSnapshot = await get(privateActivityQuery);
+        const privateActivityData = privateSnapshot.val();
+  
+        // Filter private activities based on user's participation
+        const filteredPrivateActivities = Object.entries(privateActivityData as Activity || {}).reduce((result, [activityId, activity]) => {
+          const groups = activity.groups || {};
+          const isUserParticipant = Object.values(groups as Record<string,Group>).some((group) =>
+            Object.values(group.participants || {}).includes(props.userID)
+          );
+          if (isUserParticipant) {
+            result[activityId] = activity;
+          }
+          return result;
+        }, {});
+  
+        // Fetch public activities
+        const publicActivityQuery = query(actRef, orderByChild("private"), equalTo(false));
+        const publicSnapshot = await get(publicActivityQuery);
+        const publicActivityData = publicSnapshot.val();
+  
+        // Set the fetched and filtered activity data
+        setActivityData({
+          privateActivities: filteredPrivateActivities,
+          publicActivities: publicActivityData
+        });
+      } catch (error) {
         console.error(error);
-      });
-  }, [dbRef]);
-
-  if (loading) {
-    return <p>Loading...</p>;
-  }
+      }
+    };
+  
+    fetchData();
+  }, [props.userID]);
 
   return (
     <div className="page">
@@ -63,17 +81,17 @@ const ActivitiesPageComponent = (props) => {
         <div className="row">
           <div className="btn-group-vertical col-md-4" role="group">
             <h2 className="text-center mx-auto">Actividades públicas</h2>
-            {Object.entries(userData.activities).map(([id]) => (
+            {Object.entries(activityData.publicActivities || {}).map(([id]) => (
               <div key={id}>
                 <button type="button" className="btn btn-primary">{id}</button>
               </div>
             ))}
             <h2 className="text-center mx-auto mt-5">Actividades privadas</h2>
-            {/* {Object.entries(groupsData.activities).map(([id]) => (
+            {Object.entries(activityData.privateActivities || {}).map(([id]) => (
               <div key={id}>
                 <button type="button" className="btn btn-primary">{id}</button>
               </div>
-            ))} */}
+            ))}
           </div>
 
           <div className="content col-md-8">
@@ -93,4 +111,11 @@ const ActivitiesPageComponent = (props) => {
   );
 }
 
-export default ActivitiesPageComponent;
+const mapStateToProps = (state) => {
+  return {
+    userID: state.User.userID,
+    logged: state.User.logged,
+  };
+};
+
+export default connect(mapStateToProps)(ActivitiesPageComponent);

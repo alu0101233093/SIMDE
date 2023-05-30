@@ -47,8 +47,7 @@ const LogInPageComponent = () => {
       await signInWithEmailAndPassword(getAuth(app), LogInEmail, LogInPassword);
       // redirigir a la página de inicio de sesión exitosa
       const emailQuery = await get(query(usersRef, orderByChild("email"), equalTo(LogInEmail)));
-      const snapshot = emailQuery;
-      const users = snapshot.val();
+      const users = emailQuery.val();
       const userID = Object.keys(users)[0];
       alert('Successfully logged in!');
       dispatch({ type: "LOGEDIN", value: userID });
