@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { connect, useDispatch } from "react-redux";
 import { database } from "../../../main";
-import { child, equalTo, get, orderByChild, query, ref } from "firebase/database";
+import { child, equalTo, get, orderByChild, query, ref, remove } from "firebase/database";
 import { Navigate, useNavigate } from "react-router";
 import swal from 'sweetalert';
+import { deleteUser, getAuth } from "firebase/auth";
 
 interface UserData {
   lastName: string;
@@ -66,11 +67,24 @@ const ProfilePageComponent = (props) => {
       dangerMode: true,
     })
     .then((willDelete) => {
-      if (willDelete) {
-        swal("Poof! Your imaginary file has been deleted!", {
-          icon: "success",
+      const user = getAuth().currentUser;
+      if (willDelete && user !== null) {
+        swal("User deleted", { icon: "success" });
+        deleteUser(user).then(() => {
+          remove(child(dbRef, 'Users/' + props.userID))
+          .then(() => {
+            dispatch({ type: "LOGEDOUT"});
+            navigate("/");
+          })
+          .catch((error) => {
+            console.log("Error al eliminar el usuario de RTDB:", error);
+          });
+        }).catch((error) => {
+          console.log("Error al eliminar el usuario de Authentication:", error);
         });
-        dispatch({ type: "LOGEDOUT"});
+        
+      } else {
+        console.log("Error authentication");
       }
     });
   }

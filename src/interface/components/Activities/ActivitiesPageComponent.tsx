@@ -15,6 +15,7 @@ interface Group {
 }
 
 interface Activity {
+  tittle: string
   evaluation: string
   groups: Record<string, Group>
   maxNumParticipants: number
@@ -92,15 +93,15 @@ const ActivitiesPageComponent = (props) => {
         <div className="row">
           <div className="btn-group-vertical col-md-4" role="group">
             <h2 className="text-center mx-auto">Actividades públicas</h2>
-            {Object.entries(activityData.publicActivities || {}).map(([id]) => (
+            {Object.entries(activityData.publicActivities || {}).map(([id,activity]) => (
               <div key={id}>
-                <button type="button" className="btn btn-primary">{id}</button>
+                <button type="button" className="btn btn-primary">{activity.tittle}</button>
               </div>
             ))}
             <h2 className="text-center mx-auto mt-5">Actividades privadas</h2>
-            {Object.entries(activityData.privateActivities || {}).map(([id]) => (
+            {Object.entries(activityData.privateActivities || {}).map(([id,activity]) => (
               <div key={id}>
-                <button type="button" className="btn btn-primary">{id}</button>
+                <button type="button" className="btn btn-primary">{activity.tittle}</button>
               </div>
             ))}
           </div>
