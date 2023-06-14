@@ -52,7 +52,7 @@ const LogInPageComponent = () => {
       dispatch({ type: "LOGEDIN", value: userID });
       // redirigiendo a profile
       await swal("Successfully logged in!", "Redirecting to Profile...", "success");
-      navigate("/Profile");
+      navigate("/activities");
     } catch (error) {
       console.error(error);
       swal("Error logging in", String(error), "error");
