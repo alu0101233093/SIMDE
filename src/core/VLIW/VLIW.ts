@@ -58,7 +58,7 @@ export class VLIW extends Machine {
         this._NaTFP[index] = n;
     }
 
-    public setNUF(index: number, n: number) {
+    public setNUF(index: number, n: number) { // devolver siempre 1
         this._functionalUnitNumbers[index] = (index === FunctionalUnitType.JUMP) ? 1 : n;
     }
 
