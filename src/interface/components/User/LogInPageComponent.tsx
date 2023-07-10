@@ -14,6 +14,7 @@ const LogInPageComponent = () => {
   const [LogInEmail, setLogInEmail] = React.useState('');
   const [LogInPassword, setLogInPassword] = React.useState('');
   const [SignInEmail, setSignInEmail] = React.useState('');
+  const [SignInName, setSignInName] = React.useState('');
   const [SignInPassword, setSignInPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [t, _] = useTranslation();
@@ -27,6 +28,10 @@ const LogInPageComponent = () => {
 
   const handleSignInEmailChange = (event) => {
     setSignInEmail(event.target.value);
+  };
+
+  const handleSignInNameChange = (event) => {
+    setSignInName(event.target.value);
   };
 
   const handleLogInPasswordChange = (event) => {
@@ -50,9 +55,9 @@ const LogInPageComponent = () => {
       const users = emailQuery.val();
       const userID = Object.keys(users)[0];
       dispatch({ type: "LOGEDIN", value: userID });
-      // redirigiendo a profile
-      await swal("Successfully logged in!", "Redirecting to Profile...", "success");
-      navigate("/activities");
+      // redirigiendo a mis actividades
+      await swal("Successfully logged in!", "Redirecting to my activities...", "success");
+      navigate("/myactivities");
     } catch (error) {
       console.error(error);
       swal("Error logging in", String(error), "error");
@@ -69,6 +74,10 @@ const LogInPageComponent = () => {
       swal("Password too short", "Password needs to have at least 6 characters", "info");
       return;
     }
+    if (SignInName.length < 1) {
+      swal("Invalid name", "Name is required to complete the sign in", "info");
+      return;
+    }
     try {
       let uid: string = ""
       // Creación del usuario en Firebase Authentication
@@ -80,8 +89,7 @@ const LogInPageComponent = () => {
       // Se guarda el nuevo usuario en Firebase RTDB
       await set(ref(database,"Users/" + uid), {
         email: SignInEmail,
-        lastName: "",
-        name: "",
+        name: SignInName,
         role: "student"
       });
       // Inicio de sesión
@@ -91,7 +99,7 @@ const LogInPageComponent = () => {
       const users = emailQuery.val();
       const userID = Object.keys(users)[0];
       dispatch({ type: "LOGEDIN", value: userID });
-      // Redirigiendo a profile
+      // Redirigiendo a profile 
       await swal("Successfully registered!", "Redirecting to Profile...", "success");
       navigate("/Profile");
     } catch (error) {
@@ -101,7 +109,7 @@ const LogInPageComponent = () => {
   };
   
   return (
-  <div className="page">
+  <div className="page  pt-5">
     <h1 className="text-center mb-5">
       Te damos la bienvenida a SIMDE Web
     </h1>
@@ -115,6 +123,10 @@ const LogInPageComponent = () => {
                 <div className="form-group m-3">
                   <label htmlFor="email">{t('LogInPage.emailLabel')}</label>
                   <input type="email" id="email" className="form-control" value={SignInEmail} onChange={handleSignInEmailChange} />
+                </div>
+                <div className="form-group m-3">
+                  <label htmlFor="name">Nombre</label>
+                  <input type="name" id="name" className="form-control" value={SignInName} onChange={handleSignInNameChange} />
                 </div>
                 <div className="form-group m-3">
                   <label htmlFor="password">{t('LogInPage.passwordLabel')}</label>

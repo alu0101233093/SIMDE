@@ -6,10 +6,12 @@ import ProjectPage from "./components/LandingPage/ProjectPageComponent";
 import SuperescalarComponent from "./components/Superescalar/SuperescalarComponent";
 import VLIWComponent from "./components/VLIW/VLIWComponent";
 import LogInPageComponent from "./components/User/LogInPageComponent";
+import MyActivitiesPageComponent from "./components/Activities/MyActivitiesPageComponent";
 import ActivitiesPageComponent from "./components/Activities/ActivitiesPageComponent";
 import ProfilePageComponent from "./components/User/ProfilePageComponent";
 import NavbarComponent from "./components/NavbarComponent";
 import FooterComponent from "./components/FooterComponent";
+import TestingPageComponent from "./components/Activities/TestingPageComponent";
 
 
 const App = () => {
@@ -23,7 +25,9 @@ const App = () => {
                             <Route path="/superescalar" element={<SuperescalarComponent />} />
                             <Route path="/vliw" element={<VLIWComponent />} />
                             <Route path="/project" element={<ProjectPage />} />
+                            <Route path="/myactivities" element={<MyActivitiesPageComponent />} />
                             <Route path="/activities" element={<ActivitiesPageComponent />} />
+                            <Route path="/testing" element={<TestingPageComponent />} />
                             <Route path="/logIn" element={<LogInPageComponent />} />
                             <Route path="/profile" element={<ProfilePageComponent />} />
                         </Routes>

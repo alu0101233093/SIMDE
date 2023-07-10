@@ -21,108 +21,49 @@ interface Activity {
   groups: Record<string, Group>
   private: boolean
   tasks: Record<string, string>
-}
-
-interface ActivityList {
-  privateActivities: Record<string,Activity>
-  publicActivities: Record<string,Activity>
+  minNumParticipants: number
+  maxNumParticipants: number
 }
 
 const ActivitiesPageComponent = (props) => {
-  const navigate = useNavigate();
-
-  const loggedCheck = async () => {
-    if (!props.logged) {
-      await swal("User not logged", "You have to login to access this page", "info");
-      navigate("/logIn");
-    }
-  }
-
   const [t, _] = useTranslation();
+  const [activityData, setActivityData] = React.useState<Activity[]>([]);
   const [groupSelection, setGroupSelection] = React.useState<string[]>([]);
-  const [rankingData, setRankingData] = React.useState<[string, number][]>([]);
   const [selectedActivity, setSelectedActivity] = React.useState<Activity>({
     tittle: "",
     evaluation: "",
     groups: {},
     private: false,
-    tasks: {}
-  });
-  const [activityData, setActivityData] = React.useState<ActivityList>({
-    privateActivities: {},
-    publicActivities: {}
+    tasks: {},
+    minNumParticipants: 0,
+    maxNumParticipants: 0,
   });
 
-  const fetchRankingData = async (event, activityId) => {
+  const handleActivitySelection = (event, activityId) => {
     event.preventDefault();
-    try {
-      const database = getDatabase();
-      const activityRef = ref(database, `Activities/${activityId}`);
-      const activitySnapshot = await get(activityRef);
-      const activityData: Activity = activitySnapshot.val();
-  
-      if (activityData && activityData.groups) {
-        const scores: Record<string, number> = Object.entries(activityData.groups).reduce((result, [groupId, group]) => {
-          result[groupId] = group.score;
-          return result;
-        }, {});
-
-        // Convert scores object to an array of [groupId, score] pairs
-        const rankingArray = Object.entries(scores);
-
-        // Sort the rankingArray based on the score in descending order
-        rankingArray.sort((a, b) => b[1] - a[1]);
-
-        // Update the state with the sorted ranking data
-        setRankingData(rankingArray);
-      }
-    } catch (error) {
-      console.error(error);
+    if (!props.logged) {
+      swal("User not logged", "Login required to participate in a public activity", "info");
+      return;
     }
-  };
-
-  const handleActivitySelection = async (event, activityId) => {
-    event.preventDefault();
-    try {
-      const activity = activityData.privateActivities?.[activityId] || activityData.publicActivities?.[activityId];
-      await setSelectedActivity(activity);
-      await fetchRankingData(event, activityId);
   
-      // Verificar si el usuario está en algún grupo de la actividad seleccionada
-      const group = Object.values(activity?.groups || {}).find((group) =>
-        Object.values(group.participants || {}).includes(props.userID)
-      );
-  
-      if (!group) {
-        console.log("El usuario no está en ningún grupo de esta actividad");
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleCodeSubmit = async (event) => {
-    event.preventDefault();
-    const activityId = event.target.elements.code.value;
+    setSelectedActivity(activityData[activityId]);
+    const selectedActivity = activityData[activityId];
   
     try {
-      const database = getDatabase();
-      const activityRef = ref(database, `Activities/${activityId}`);
-      const activitySnapshot = await get(activityRef);
-      const activityData = activitySnapshot.val();
-  
-      if (activityData) {
+      if (selectedActivity) {
         // Verificar si la actividad es individual (máximo y mínimo un participante)
-        const isIndividualActivity = activityData.minNumParticipants == 1 && activityData.maxNumParticipants == 1;
+        const isIndividualActivity = selectedActivity.minNumParticipants == 1 && selectedActivity.maxNumParticipants == 1;
   
         if (isIndividualActivity) {
           const groupsRef = ref(database, `Activities/${activityId}/groups`);
           const newGroupRef = push(groupsRef); // Generar un nuevo ID único para el grupo
-          const groupId = String(newGroupRef.key);
   
           const newGroup = {
             actualPhase: 1,
-            files: {},
+            files: {
+              code: "",
+              memory: ""
+            },
             participants: {
               "01": props.userID,
             },
@@ -130,39 +71,31 @@ const ActivitiesPageComponent = (props) => {
           };
   
           // Guardar el nuevo grupo en la base de datos
-          await set(newGroupRef, newGroup);
-  
-          // Actualizar el estado de la actividad seleccionada con el nuevo grupo
-          await setSelectedActivity({
-            ...activityData,
-            groups: {
-              [groupId]: newGroup,
-            }
-          });
+          set(newGroupRef, newGroup);
   
           swal("Registrado correctamente a la actividad", "success");
         } else {
-          console.log("La actividad no es individual"); ///////////////////////////////////////////
           const groupsRef = ref(database, `Activities/${activityId}/groups`);
-          const groupsSnapshot = await get(groupsRef);
-          const groupsData = groupsSnapshot.val();
+          get(groupsRef).then((groupsSnapshot) => {
+            const groupsData = groupsSnapshot.val();
 
-          // Obtener los nombres de los grupos con plazas disponibles
-          const availableGroupNames = Object.entries(groupsData || {}).reduce(
-            (result: string[], [groupId, group]) => {
-              const hasAvailableSpot = Object.values((group as Group).participants || {}).includes("");
-              if (hasAvailableSpot) {
-                result.push(groupId);
-              }
-              return result;
-            },
-            []
+            // Obtener los nombres de los grupos con plazas disponibles
+            const availableGroupNames = Object.entries(groupsData || {}).reduce(
+              (result: string[], [groupId, group]) => {
+                const hasAvailableSpot = Object.values((group as Group).participants || {}).includes("");
+                if (hasAvailableSpot) {
+                  result.push(groupId);
+                }
+                return result;
+              },
+              []
             );
 
-          // Actualizar el estado con los nombres de los grupos disponibles
-          setGroupSelection(availableGroupNames);
-          await setSelectedActivity({
-            ...activityData
+            if(availableGroupNames.length == 0)
+              swal("No hay grupos disponibles", "Contacta con un administrador si crees que se trata de un error", "info");
+
+            // Actualizar el estado con los nombres de los grupos disponibles
+            setGroupSelection(availableGroupNames);
           });
         }
       } else {
@@ -171,90 +104,10 @@ const ActivitiesPageComponent = (props) => {
     } catch (error) {
       console.error(error);
     }
-  };  
-  
-  React.useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await loggedCheck();
-        const database = getDatabase();
-        const actRef = ref(database, "Activities");
-  
-        // Fetch private activities
-        const privateActivityQuery = query(actRef, orderByChild("private"), equalTo(true));
-        const privateSnapshot = await get(privateActivityQuery);
-        const privateActivityData = privateSnapshot.val();
-  
-        // Filter private activities based on user's participation
-        const filteredPrivateActivities = Object.entries(privateActivityData as Activity || {}).reduce((result, [selectedActivity, activity]) => {
-          const groups = activity.groups || {};
-          const isUserParticipant = Object.values(groups as Record<string,Group>).some((group) =>
-            Object.values(group.participants || {}).includes(props.userID)
-          );
-          if (isUserParticipant) {
-            result[selectedActivity] = activity;
-          }
-          return result;
-        }, {});
-  
-        // Fetch public activities
-        const publicActivityQuery = query(actRef, orderByChild("private"), equalTo(false));
-        const publicSnapshot = await get(publicActivityQuery);
-        const publicActivityData = publicSnapshot.val();
-
-        // Filter public activities based on user's participation
-        const filteredPublicActivities = Object.entries(publicActivityData as Activity || {}).reduce((result, [selectedActivity, activity]) => {
-          const groups = activity.groups || {};
-          const isUserParticipant = Object.values(groups as Record<string,Group>).some((group) =>
-            Object.values(group.participants || {}).includes(props.userID)
-          );
-          if (isUserParticipant) {
-            result[selectedActivity] = activity;
-          }
-          return result;
-        }, {});
-  
-        // Set the fetched and filtered activity data
-        setActivityData({
-          privateActivities: filteredPrivateActivities,
-          publicActivities: filteredPublicActivities
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    };
-  
-    fetchData();
-  }, [props.userID,groupSelection]);
-
-
-  //////////////////////////////////////////
-
-  const [text, setText] = React.useState('');
-
-  const handleInputChange = (event) => {
-    setText(event.target.value);
   };
+  
 
-  const handleDrop = (event) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      if (e.target && e.target.result) {
-        setText(e.target.result.toString());
-      }
-    };
-
-    reader.readAsText(file);
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
-  };
-
-  const handleGroupSelection = async (groupId) => {
+  const handleGroupSelection = async (groupId) => {     ///////////////////////////////////////////////////////////////////////////////////////
     try {
       const database = getDatabase();
 
@@ -262,13 +115,10 @@ const ActivitiesPageComponent = (props) => {
       const activitiesSnapshot = await get(ref(database, `Activities`));
       const activitiesData = activitiesSnapshot.val();
 
-      console.log(selectedActivity)
       const ActivityID = Object.entries(activitiesData).find((val) => {
         if((val[1] as Activity).tittle == selectedActivity.tittle)
           return val[0];
       })
-
-      console.log(ActivityID)
 
       if (!ActivityID) {
         swal("Error al obtener la actividad seleccionada", "error");
@@ -314,21 +164,53 @@ const ActivitiesPageComponent = (props) => {
       };
       setSelectedActivity(updatedActivity);
   
-      await swal("Registrado correctamente en el grupo", "success");
+      await swal("Registrado correctamente en el grupo:" + groupId, "success");
       setGroupSelection([]);
     } catch (error) {
       console.error(error);
     }
   };
   
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const database = getDatabase();
+        const actRef = ref(database, "Activities");
+  
+        // Fetch public activities
+        const publicActivityQuery = query(actRef, orderByChild("private"), equalTo(false));
+        const publicSnapshot = await get(publicActivityQuery);
+        const publicActivityData = publicSnapshot.val();
+
+        // Filter activities based on user's participation
+        const nonParticipatingActivities = Object.entries(publicActivityData as Activity || {}).reduce((result, [selectedActivity, activity]) => {
+          const groups = activity.groups || {};
+          const isUserParticipant = Object.values(groups as Record<string,Group>).some((group) =>
+          Object.values(group.participants || {}).includes(props.userID)
+          );
+          if (!isUserParticipant) {
+          result[selectedActivity] = activity;
+          }
+          return result;
+        }, {});
+  
+        // Set the fetched activity data
+        setActivityData(nonParticipatingActivities as Activity[]);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+  
+    fetchData();
+  }, [props.userID,groupSelection,selectedActivity]);
 
   return (
-    <div className="page">
+    <div className="page pt-5">
       <div className="container-fluid">
-        {groupSelection.length > 1 ? (
-          <div>
-            <h2 className="text-center mx-auto mt-5">Selecciona un grupo</h2>
-            <div className="group-buttons">
+      {groupSelection.length > 1 ? (
+          <div className="group-buttons text-center">
+            <h1>Selecciona un grupo</h1>
+            <div className="group-buttons mt-5">
               {groupSelection.map((groupId) => (
                 <button
                   key={groupId}
@@ -342,131 +224,19 @@ const ActivitiesPageComponent = (props) => {
             </div>
           </div>
         ) : (
-          <div className="row">
-            <div className="content col-2 ms-5 p-4 rounded-3" style={{ backgroundColor: "rgba(122, 59, 122, 0.5)" }} role="group">
-              <h2 className="text-center mx-auto"><strong>Actividades públicas</strong></h2>
-              {Object.entries(activityData.publicActivities || {}).map(([id, activity]) => (
-                <div key={id} onClick={(event) => handleActivitySelection(event, id)}>
-                  <button type="button" className="btn btn-primary m-1">
-                    {activity.tittle}
-                  </button>
-                </div>
-              ))}
-              <h2 className="text-center mx-auto mt-5"><strong>Actividades privadas</strong></h2>
-              {Object.entries(activityData.privateActivities || {}).map(([id, activity]) => (
-                <div key={id} onClick={(event) => handleActivitySelection(event, id)}>
-                  <button type="button" className="btn btn-primary m-1">
-                    {activity.tittle}
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="content col-7 ms-3">
-              {selectedActivity.tittle ? (
-                <div className="ms-5">
-                  <h2>{selectedActivity.tittle}</h2>
-                  <p>{selectedActivity.evaluation}</p>
-
-                  <h3>Tareas</h3>
-                  <ul>
-                    {Object.entries(selectedActivity.tasks || {}).map(([taskId, task]) => (
-                      <li key={taskId}>{task}</li>
-                    ))}
-                  </ul>
-
-                  <div>
-                    <div>
-                      <textarea
-                        value={text}
-                        onChange={handleInputChange}
-                        placeholder="Escribe tu texto aquí"
-                        style={{ width: '100%', height: '200px' }}
-                      />
-                    </div>
-                    <div
-                      onDrop={handleDrop}
-                      onDragOver={handleDragOver}
-                      style={{
-                        border: '2px dashed #ccc',
-                        padding: '20px',
-                        marginTop: '20px',
-                        textAlign: 'center',
-                      }}
-                    >
-                      Arrastra y suelta un archivo de texto aquí
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="form-container mx-auto text-center">
-                  <h1 className="mb-4">Introduce el código de la actividad</h1>
-                  <form onSubmit={handleCodeSubmit}>
-                    <div className="form-group">
-                      <input type="text" className="form-control" name="code" placeholder="Ejemplo: 123456" />
-                    </div>
-                    <button type="submit" className="btn btn-primary btn-lg mt-3">
-                      Apuntarse
-                    </button>
-                  </form>
-                </div>
-              )}
-            </div>
-
-            <div className="content col-2 ms-5 p-4 rounded-3" style={{ backgroundColor: "rgba(122, 59, 122, 0.5)" }}>
-              <h2 className="text-center mx-auto">
-                <strong>Ranking</strong>
-              </h2>
-              <div className="d-flex justify-content-between align-items-center">
-                <span><strong>Grupo</strong></span>
-                <span><strong>Puntaje</strong></span>
-              </div>
-              {Object.entries(rankingData).map(([_, [groupId, score]]) => {
-                if (score > -1) {
-                  return (
-                    <div key={groupId} className="d-flex justify-content-between align-items-center">
-                      <span>{groupId}</span>
-                      <span>{score}</span>
-                    </div>
-                  );
-                } else {
-                  return null;
-                }
-              })}
-            </div>
-
-            {selectedActivity.tittle ? (
-              <div className="row ps-5">
-                <div className="content col-3">
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-lg mt-3"
-                    onClick={() => {
-                      setSelectedActivity({
-                        tittle: "",
-                        evaluation: "",
-                        groups: {},
-                        private: false,
-                        tasks: {},
-                      });
-                      setRankingData([]);
-                    }}
-                  >
-                    Nueva actividad
-                  </button>
-                </div>
-                <div className="col-6">
-                  {/* Aquí puedes agregar contenido adicional en la columna central si es necesario */}
-                </div>
-                <div className="content col-3 d-flex justify-content-end">
-                  <button type="button" className="btn btn-primary btn-lg mt-3">
-                    Fase de pruebas
-                  </button>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        )}
+        <div className="group-buttons text-center">
+          <h1>Actividades Públicas</h1>
+          {activityData? Object.entries(activityData || {}).map(([id, activity]) => (
+            <button 
+              type="button" 
+              className="btn btn-primary m-1" 
+              key={id} 
+              onClick={(event) => handleActivitySelection(event, id)}>
+              {activity.tittle}
+            </button>
+          )): <p>No hay actividades públicas disponibles</p>}
+        </div>
+      )}
       </div>
     </div>
   );

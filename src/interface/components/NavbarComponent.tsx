@@ -7,7 +7,7 @@ const NavbarComponent = (props) => {
   const [t, _] = useTranslation();
 
   return (
-    <div className="topnav mb-5">
+    <div className="topnav">
       <ul className="navul">
         <b className="navbaricon">
           <img
@@ -27,13 +27,20 @@ const NavbarComponent = (props) => {
         <li>
           <Link to="/Activities">{t("LogInPage.activities")}</Link>
         </li>
-        <li style={{ float: "right" }}>
-          {props.logged ? (
-            <Link to="/Profile">Perfil</Link>
+        {props.logged ? (
+          <div>
+            <li style={{ float: "right" }}>
+              <Link to="/Profile">Perfil</Link>
+            </li>
+            <li style={{ float: "right" }}>
+              <Link to="/MyActivities">{t("LogInPage.myactivities")}</Link>
+            </li>
+          </div>
           ) : (
+          <li style={{ float: "right" }}>
             <Link to="/LogIn">{t("LogInPage.logIn")}</Link>
+          </li>
           )}
-        </li>
       </ul>
     </div>
   );
