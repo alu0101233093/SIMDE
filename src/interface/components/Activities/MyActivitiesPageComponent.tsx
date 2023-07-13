@@ -21,6 +21,9 @@ interface Activity {
   groups: Record<string, Group>
   private: boolean
   tasks: Record<string, string>
+  machine: string
+  minNumParticipants: number
+  maxNumParticipants: number
 }
 
 interface ActivityList {
@@ -46,7 +49,10 @@ const MyActivitiesPageComponent = (props) => {
     evaluation: "",
     groups: {},
     private: false,
-    tasks: {}
+    tasks: {},
+    machine: "",
+    minNumParticipants: 0,
+    maxNumParticipants: 0,
   });
   const [activityData, setActivityData] = React.useState<ActivityList>({
     privateActivities: {},
@@ -70,8 +76,8 @@ const MyActivitiesPageComponent = (props) => {
         // Convert scores object to an array of [groupId, score] pairs
         const rankingArray = Object.entries(scores);
 
-        // Sort the rankingArray based on the score in descending order
-        rankingArray.sort((a, b) => b[1] - a[1]);
+        // Sort the rankingArray based on the score in ascending order
+        rankingArray.sort((a, b) => a[1] - b[1]);
 
         // Update the state with the sorted ranking data
         setRankingData(rankingArray);
@@ -85,6 +91,7 @@ const MyActivitiesPageComponent = (props) => {
     event.preventDefault();
     try {
       const activity = activityData.privateActivities?.[activityId] || activityData.publicActivities?.[activityId];
+      dispatch({ type: "ACTIVIYDATA", value: activity });
       await setSelectedActivity(activity);
       await fetchRankingData(event, activityId);
   
@@ -94,10 +101,10 @@ const MyActivitiesPageComponent = (props) => {
       );
   
       if (!group) {
-        console.log("El usuario no está en ningún grupo de esta actividad");
+        swal("Error","El usuario no está en ningún grupo de esta actividad","error");
       }
     } catch (error) {
-      console.error(error);
+      swal("Ha ocurrido un error",error.message,"error");
     }
   };
 
@@ -244,7 +251,7 @@ const MyActivitiesPageComponent = (props) => {
     reader.onload = (e) => {
       if (e.target && e.target.result) {
         // Reemplaza los saltos de línea por el carácter de escape "\\n"
-        const text = e.target.result.toString().replace(/\n/g, "\\n");
+        const text = e.target.result as string;
         setText(text);
       }
     };
@@ -321,8 +328,11 @@ const MyActivitiesPageComponent = (props) => {
   };
   
   const handleTesting = async () => {
-    await dispatch({ type: "ACTIVITYCODE", value: text });
-    navigate("/testing");
+    if(text.length > 0){
+      await dispatch({ type: "ACTIVITYCODE", value: text });
+      navigate("/testing");
+    } else 
+      swal("Debes introducir código para pasar a la fase de pruebas")
   }
 
   return (
@@ -447,6 +457,9 @@ const MyActivitiesPageComponent = (props) => {
                           groups: {},
                           private: false,
                           tasks: {},
+                          machine: "",
+                          minNumParticipants: 0,
+                          maxNumParticipants: 0,
                         });
                         setRankingData([]);
                       }}

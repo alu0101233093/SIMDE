@@ -21,6 +21,7 @@ interface Activity {
   groups: Record<string, Group>
   private: boolean
   tasks: Record<string, string>
+  machine: string
   minNumParticipants: number
   maxNumParticipants: number
 }
@@ -35,6 +36,7 @@ const ActivitiesPageComponent = (props) => {
     groups: {},
     private: false,
     tasks: {},
+    machine: "",
     minNumParticipants: 0,
     maxNumParticipants: 0,
   });
@@ -186,7 +188,7 @@ const ActivitiesPageComponent = (props) => {
         const nonParticipatingActivities = Object.entries(publicActivityData as Activity || {}).reduce((result, [selectedActivity, activity]) => {
           const groups = activity.groups || {};
           const isUserParticipant = Object.values(groups as Record<string,Group>).some((group) =>
-          Object.values(group.participants || {}).includes(props.userID)
+            Object.values(group.participants || {}).includes(props.userID)
           );
           if (!isUserParticipant) {
           result[selectedActivity] = activity;

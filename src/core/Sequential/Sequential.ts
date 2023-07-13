@@ -64,6 +64,7 @@ export class Sequential extends Machine {
     }
 
     private runOperation() {
+        //console.log("Executing: " + this._currentInstruction.toString());
         switch (this._currentInstruction.opcode) {
             case Opcodes.ADD:
                 this._gpr.setContent(this._currentInstruction.getOperand(0), this._gpr.getContent(this._currentInstruction.getOperand(1)) + this._gpr.getContent(this._currentInstruction.getOperand(2)), true);
@@ -137,17 +138,26 @@ export class Sequential extends Machine {
                 break;
             case Opcodes.BEQ:
                 if (this._gpr.getContent(this._currentInstruction.getOperand(0)) === this._gpr.getContent(this._currentInstruction.getOperand(1))) {
-                    this.pc = this._currentInstruction.getOperand(2);
+                    this.pc = this.code.getBasicBlockInstruction(this._currentInstruction.getOperand(2));
+                }
+                else {
+                    this.pc++;
                 } 
                 break;
             case Opcodes.BGT:
                 if (this._gpr.getContent(this._currentInstruction.getOperand(0)) >= this._gpr.getContent(this._currentInstruction.getOperand(1))) {
-                    this.pc = this._currentInstruction.getOperand(2);
+                    this.pc = this.code.getBasicBlockInstruction(this._currentInstruction.getOperand(2));
+                } 
+                else {
+                    this.pc++;
                 } 
                 break;
             case Opcodes.BNE:
                 if (this._gpr.getContent(this._currentInstruction.getOperand(0)) !== this._gpr.getContent(this._currentInstruction.getOperand(1))) {
-                    this.pc = this._currentInstruction.getOperand(2);
+                    this.pc = this.code.getBasicBlockInstruction(this._currentInstruction.getOperand(2));
+                } 
+                else {
+                    this.pc++;
                 } 
                 break;
             default:
@@ -157,12 +167,11 @@ export class Sequential extends Machine {
     }
     
     tic(): SequentialStatus {
+        //console.log("PC " + this.pc);
+        //console.log("CYCLE " + this.status.cycle);
         // Instrucción no cargada
         if (this._currentInstCycle == 0) {
-            // Importante: Hago una copia de la instrucción original para distinguir
-            // las distintas apariciones de una misma inst.
-            this._currentInstruction = new Instruction();
-            this._currentInstruction.copy(this.code.instructions[this.pc]);
+            this._currentInstruction = this.code.instructions[this.pc];
         }
         this._currentInstCycle++;
         if (this._currentInstCycle === this.getLatencyForOperation()) {
@@ -170,6 +179,10 @@ export class Sequential extends Machine {
             // Vuelvo a poner el contador de ciclos de instrucción a 0 para que cargue la siguiente instrucción al hacer "tic"
             this._currentInstCycle = 0;
         }
+
+        this._gpr.tic();
+        this._fpr.tic();
+
         this.status.cycle++;
         // Llegamos a la última línea de código
         if (this.pc === this.code.lines)

@@ -13,7 +13,6 @@ interface UserData {
   email: string;
   name: string;
   role: string;
-  activities: Record<string, { actualPhase: number }>;
 }
 
 const ProfilePageComponent = (props) => {
@@ -30,7 +29,6 @@ const ProfilePageComponent = (props) => {
     email: "",
     name: "",
     role: "",
-    activities: {},
   });
 
   useEffect(() => {

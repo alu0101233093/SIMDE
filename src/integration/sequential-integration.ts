@@ -34,6 +34,7 @@ export class SequentialIntegration extends MachineIntegration {
     replications = 0;
     cacheFailPercentage = 0;
     cacheFailLatency = 0;
+    results = [];
 
     /*
     * This call all the components to update the state
@@ -41,10 +42,11 @@ export class SequentialIntegration extends MachineIntegration {
     * their history to set the appropiate content
     */
     dispatchAllSequentialActions = (step?: number) => {
-        
+
     }
 
     sequExe = (reset: boolean = true) => {
+        this.sequential.init(reset);
     }
 
     stepForward = () => {
@@ -94,7 +96,7 @@ export class SequentialIntegration extends MachineIntegration {
             this.executionLoop(speed);
         } else {
             // tslint:disable-next-line:no-empty
-            while (this.sequential.tic() !== SequentialStatus.SEQ_ENDEXE) { } // Creamos acciones para secuencial???
+            while (this.sequential.tic() !== SequentialStatus.SEQ_ENDEXE) { }
             this.dispatchAllSequentialActions();
             this.finishedExecution = true;
             alert(t('execution.finished'));
@@ -106,7 +108,7 @@ export class SequentialIntegration extends MachineIntegration {
             return;
         }
 
-        const results = [];
+        this.results = [];
         for (let i = 0; i < this.replications; i++) {
             let code = Object.assign(new Code(), this.sequential.code);
             this.sequExe();
@@ -122,11 +124,15 @@ export class SequentialIntegration extends MachineIntegration {
             }
 
             // tslint:disable-next-line:no-empty
-            while (this.sequential.tic() !== SequentialStatus.SEQ_ENDEXE) { }
-            results.push(this.sequential.status.cycle);
+            // for (let i = 0; i < 14; i++) {
+            //     this.sequential.tic();
+            // }
+
+            while (this.sequential.tic() !== SequentialStatus.SEQ_ENDEXE) {  }
+            this.results.push(this.sequential.status.cycle);
         }
 
-        const statistics = this.calculateBatchStatistics(results);
+        const statistics = this.calculateBatchStatistics(this.results);
         this.clearBatchStateEffects();
         store.dispatch(displayBatchResults(statistics));
     }

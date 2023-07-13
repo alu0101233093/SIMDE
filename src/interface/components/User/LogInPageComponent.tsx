@@ -1,7 +1,8 @@
 import * as React from "react";
 import { BrowserRouter as Router, Route, Link, Navigate, useNavigate} from 'react-router-dom';
 import { useTranslation } from "react-i18next";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+
 
 import { getAuth } from "firebase/auth"
 import { app, database } from "../../../main";
@@ -9,6 +10,7 @@ import { useDispatch } from "react-redux";
 import { equalTo, get, orderByChild, push, query, ref, set } from "firebase/database";
 
 import swal from 'sweetalert';
+import { Sign } from "crypto";
 
 const LogInPageComponent = () => {
   const [LogInEmail, setLogInEmail] = React.useState('');
@@ -107,6 +109,38 @@ const LogInPageComponent = () => {
       swal("Error registering", String(error), "error");
     }
   };
+
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+  
+    try {
+      const result = await signInWithPopup(getAuth(app), provider);
+      const user = result.user;
+      
+      let uid = user.uid;
+  
+      const userQuery = await get(query(usersRef, orderByChild("email"), equalTo(SignInEmail)));
+      const users = userQuery.val();
+
+      // Si el usuario no existe, se crea.
+      if(!users) {
+        await set(ref(database,"Users/" + uid), {
+          email: user.email,
+          name: user.displayName,
+          role: "student"
+        });
+      }
+      
+      // Dispatch the user ID.
+      dispatch({ type: "LOGEDIN", value: uid });
+  
+      // Navigate to profile.
+      navigate("/MyActivities");
+    } catch (error) {
+      console.error(error);
+      swal("Error registering", String(error), "error");
+    }
+  };  
   
   return (
   <div className="page  pt-5">
@@ -159,6 +193,9 @@ const LogInPageComponent = () => {
               </form>
             </div>
           </div>
+          <button type="button" className="btn btn-danger btn-block mt-5" onClick={handleGoogleSignIn}>
+            Utilizar una cuenta de Google
+          </button>
         </div>
       </div>
     </div>
